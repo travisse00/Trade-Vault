@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AccountTransactionType {
+  DEPOSIT
+  WITHDRAWAL
+}
+
+enum MarketType {
+  FOREX
+  CRYPTO_SPOT
+  CRYPTO_FUTURES
+}
+
+enum TradeDirection {
+  LONG
+  SHORT
+}
+
+enum TradeStatus {
+  OPEN
+  CLOSED
+}
+
+model TradingAccount {
+  id             String   @id @default(cuid())
+  userId         String   @unique @db.Uuid
+  initialBalance Decimal  @db.Decimal(20, 8)
+  currency       String   @db.VarChar(3)
+  balanceSetAt   DateTime @default(now())
+
+  transactions AccountTransaction[]
+  corrections  BalanceCorrection[]
+  trades       Trade[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  dateFormat      String @default("DD/MM/YYYY")
+  defaultMarket   String @default("Forex")
+  timezone        String @default("Africa/Lagos")
+  defaultLeverage Int    @default(1)
+}
+
+model AccountTransaction {
+  id        String                 @id @default(cuid())
+  accountId String
+  type      AccountTransactionType
+  amount    Decimal                @db.Decimal(20, 8)
+  note      String?
+  // The date the deposit/withdrawal actually occurred, chosen by the user.
+  date      DateTime               @default(now())
+  createdAt DateTime               @default(now())
+
+  account TradingAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, date])
+}
+
+model BalanceCorrection {
+  id             String   @id @default(cuid())
+  accountId      String
+  previousAmount Decimal  @db.Decimal(20, 8)
+  newAmount      Decimal  @db.Decimal(20, 8)
+  reason         String
+  correctedAt    DateTime @default(now())
+
+  account TradingAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, correctedAt])
+}
+
+model Trade {
+  id        String @id @default(cuid())
+  accountId String
+
+  marketType MarketType
+  asset      String
+  direction  TradeDirection
+  status     TradeStatus    @default(OPEN)
+
+  entryPrice Decimal  @db.Decimal(20, 8)
+  exitPrice  Decimal? @db.Decimal(20, 8)
+
+  // Original position information
+  quantity      Decimal  @db.Decimal(20, 8)
+  positionValue Decimal? @db.Decimal(20, 8)
+  lotSize       Decimal? @db.Decimal(12, 4)
+
+  leverage   Int     @default(1)
+  marginUsed Decimal @default(0) @db.Decimal(20, 8)
+
+  // Currency conversion snapshots
+  entryConversionRate   Decimal?  @db.Decimal(20, 10)
+  entryConversionRateAt DateTime?
+
+  exitConversionRate   Decimal?  @db.Decimal(20, 10)
+  exitConversionRateAt DateTime?
+
+  // Risk management
+  stopLoss       Decimal? @db.Decimal(20, 8)
+  takeProfit     Decimal? @db.Decimal(20, 8)
+  riskPercentage Decimal? @db.Decimal(8, 4)
+
+  // Fees
+  fees        Decimal @default(0) @db.Decimal(20, 8)
+  fundingFees Decimal @default(0) @db.Decimal(20, 8)
+
+  // Calculated results, populated when closed
+  grossPnL         Decimal? @db.Decimal(20, 8)
+  totalFees        Decimal? @db.Decimal(20, 8)
+  netPnL           Decimal? @db.Decimal(20, 8)
+  returnPercentage Decimal? @db.Decimal(12, 4)
+
+  strategy String?
+  notes    String?
+
+  entryDate DateTime
+  exitDate  DateTime?
+
+  account TradingAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  images  TradeImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([accountId, entryDate])
+  @@index([accountId, status])
+  @@index([accountId, marketType])
+}
+
+model TradeImage {
+  id      String @id @default(cuid())
+  tradeId String
+
+  storagePath String
+
+  trade Trade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([tradeId])
+}
+
+model CurrencyRate {
+  id           String   @id @default(cuid())
+  fromCurrency String   @db.VarChar(3)
+  toCurrency   String   @db.VarChar(3)
+  rate         Decimal  @db.Decimal(20, 10)
+  provider     String
+  fetchedAt    DateTime @default(now())
+  expiresAt    DateTime
+
+  @@unique([fromCurrency, toCurrency])
+  @@index([expiresAt])
+}
