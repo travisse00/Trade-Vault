@@ -20,6 +20,7 @@ import {
   X,
   Settings,
   CalendarDays,
+  Lightbulb,
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
@@ -31,6 +32,7 @@ const navigation = [
   { name: "Calendar", href: "/calendar", icon: CalendarDays },
   { name: "Account", href: "/account", icon: Wallet },
   { name: "Analytics", href: "/analytics", icon: ChartColumnIncreasing },
+  { name: "Insights", href: "/insights", icon: Lightbulb },
   { name: "Strategies", href: "/strategies", icon: Target },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
