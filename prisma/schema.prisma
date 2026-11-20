@@ -28,6 +28,14 @@ enum TradeStatus {
   CLOSED
 }
 
+enum WatchlistCategory {
+  FOREX
+  CRYPTO
+  STOCKS
+  INDICES
+  COMMODITIES
+}
+
 model TradingAccount {
   id             String   @id @default(cuid())
   userId         String   @unique @db.Uuid
@@ -35,9 +43,10 @@ model TradingAccount {
   currency       String   @db.VarChar(3)
   balanceSetAt   DateTime @default(now())
 
-  transactions AccountTransaction[]
-  corrections  BalanceCorrection[]
-  trades       Trade[]
+  transactions   AccountTransaction[]
+  corrections    BalanceCorrection[]
+  trades         Trade[]
+  watchlistItems WatchlistItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -46,6 +55,27 @@ model TradingAccount {
   defaultMarket   String @default("Forex")
   timezone        String @default("Africa/Lagos")
   defaultLeverage Int    @default(1)
+}
+
+model WatchlistItem {
+  id               String            @id @default(cuid())
+  accountId        String
+  account          TradingAccount    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  name             String            @db.VarChar(120)
+  symbol           String            @db.VarChar(32)
+  normalizedSymbol String            @db.VarChar(32)
+  category         WatchlistCategory
+  notes            String?           @db.VarChar(500)
+  isFavorite       Boolean           @default(false)
+
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@unique([accountId, category, normalizedSymbol])
+  @@index([accountId, category])
+  @@index([accountId, isFavorite])
+  @@index([accountId, createdAt])
 }
 
 model AccountTransaction {

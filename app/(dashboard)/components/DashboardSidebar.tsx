@@ -21,6 +21,8 @@ import {
   Settings,
   CalendarDays,
   Lightbulb,
+  Newspaper,
+  Bookmark,
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
@@ -33,6 +35,8 @@ const navigation = [
   { name: "Account", href: "/account", icon: Wallet },
   { name: "Analytics", href: "/analytics", icon: ChartColumnIncreasing },
   { name: "Insights", href: "/insights", icon: Lightbulb },
+  { name: "Watchlist", href: "/watchlist", icon: Bookmark },
+  // { name: "Market News", href: "/market-news", icon: Newspaper },
   { name: "Strategies", href: "/strategies", icon: Target },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
@@ -137,7 +141,7 @@ function DashboardSidebar({
         </div>
 
         {/* Navigation */}
-        <div className="flex-1 overflow-y-auto px-3">
+        <div className="sidebar-scrollbar flex-1 overflow-y-auto px-3">
           {!collapsed && (
             <p className="mb-3 px-2 text-[10px] font-semibold tracking-[0.15em] text-[#686A6D]">
               WORKSPACE
@@ -270,7 +274,7 @@ function DashboardSidebar({
             </div>
 
             {/* Mobile Navigation */}
-            <div className="flex-1 overflow-y-auto px-3 py-6">
+            <div className="sidebar-scrollbar flex-1 overflow-y-auto px-3 py-6">
               <p className="mb-3 px-3 text-[10px] font-semibold tracking-[0.15em] text-[#686A6D]">
                 WORKSPACE
               </p>

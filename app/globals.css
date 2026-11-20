@@ -28,3 +28,14 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-space), sans-serif;
 }
+
+/* Hide scrollbar for sidebar navigation while keeping scroll behavior */
+.sidebar-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge legacy */
+  /* display: none; */
+}
+
+.sidebar-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
