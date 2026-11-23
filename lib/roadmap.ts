@@ -18,6 +18,8 @@ export interface RoadmapItem {
   title: string;
   description: string;
   status: RoadmapStatus;
+  /** Optional, non-committal details shown as simple bullets on the page. */
+  capabilities?: string[];
 }
 
 export const roadmapItems: RoadmapItem[] = [
@@ -48,5 +50,20 @@ export const roadmapItems: RoadmapItem[] = [
     status: "Planned",
     description:
       "Receive useful notifications about trading activity, account events and market-related updates.",
+  },
+  {
+    id: "strategy-backtesting",
+    title: "Strategy Backtesting",
+    status: "Planned",
+    description:
+      "Test trading strategies against historical market data without risking real capital. Configure entry and exit conditions, simulate trades, and analyse performance through metrics such as win rate, profit factor, drawdown and risk/reward.",
+    capabilities: [
+      "Historical chart replay.",
+      "Custom entry and exit conditions.",
+      "Stop-loss and take-profit configuration.",
+      "Simulated historical trades.",
+      "Performance analytics.",
+      "Strategy comparison.",
+    ],
   },
 ];

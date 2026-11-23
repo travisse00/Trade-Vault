@@ -62,6 +62,27 @@ export default function RoadmapPage() {
                 <p className="mt-1.5 text-sm leading-relaxed text-[#9FA1A4]">
                   {item.description}
                 </p>
+                {item.capabilities?.length ? (
+                  <div className="mt-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6F7174]">
+                      Potential capabilities
+                    </p>
+                    <ul className="mt-2 grid gap-x-5 gap-y-1.5 sm:grid-cols-2">
+                      {item.capabilities.map((capability) => (
+                        <li
+                          key={capability}
+                          className="flex items-start gap-2 text-xs leading-relaxed text-[#85878A]"
+                        >
+                          <span
+                            aria-hidden="true"
+                            className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-[#5E6063]"
+                          />
+                          {capability}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </div>
               <div className="shrink-0 sm:pt-0.5">
                 <StatusLabel status={item.status} />
