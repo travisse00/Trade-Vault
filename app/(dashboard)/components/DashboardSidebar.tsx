@@ -23,6 +23,7 @@ import {
   Lightbulb,
   Newspaper,
   Bookmark,
+  Route,
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
@@ -36,6 +37,7 @@ const navigation = [
   { name: "Analytics", href: "/analytics", icon: ChartColumnIncreasing },
   { name: "Insights", href: "/insights", icon: Lightbulb },
   { name: "Watchlist", href: "/watchlist", icon: Bookmark },
+  { name: "Roadmap", href: "/roadmap", icon: Route },
   // { name: "Market News", href: "/market-news", icon: Newspaper },
   { name: "Strategies", href: "/strategies", icon: Target },
   { name: "Settings", href: "/settings", icon: Settings },
