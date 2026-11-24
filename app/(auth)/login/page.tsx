@@ -55,7 +55,15 @@ function Login() {
       setEmail("");
       setPassword("");
       setShowPassword(false);
-      router.push("/dashboard");
+
+      // The login API reports whether a trading account has been configured.
+      // Only accept its two known destinations rather than an arbitrary value.
+      const destination =
+        data?.redirectTo === "/account-setup"
+          ? "/account-setup"
+          : "/dashboard";
+
+      router.push(destination);
       router.refresh();
     } catch (error) {
       showErrorPopup(

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validation/auth";
 import { formatZodError } from "@/lib/validation/format";
 
@@ -34,8 +35,32 @@ export async function POST(request: Request) {
 );
   }
 
+  // Send first-time users straight to account setup. A failed lookup must not
+  // block a valid login — the destination pages still run their own account
+  // guard, so fall back to the dashboard in that case.
+  let hasAccount = true;
+  const userId = authResult.data.user?.id;
+
+  if (userId) {
+    try {
+      const account = await prisma.tradingAccount.findUnique({
+        where: { userId },
+        select: { id: true },
+      });
+
+      hasAccount = account !== null;
+    } catch (error) {
+      console.error("Account lookup after login failed:", error);
+    }
+  }
+
   return Response.json(
-    { success: true, message: "You have successfully logged in!!." },
+    {
+      success: true,
+      message: "You have successfully logged in!!.",
+      hasAccount,
+      redirectTo: hasAccount ? "/dashboard" : "/account-setup",
+    },
     { status: 200 },
   );
 }

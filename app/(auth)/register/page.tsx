@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff, ChartNoAxesCombined } from "lucide-react";
 import { registerSchema } from "@/lib/validation/auth";
 import { register } from "@/lib/service/auth.service";
 import { showErrorPopup, showSuccessPopup } from "@/lib/popup";
 
 export default function RegisterPage() {
+  const router = useRouter();
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,6 +53,8 @@ export default function RegisterPage() {
       setEmail("");
       setPassword("");
       setShowPassword(false);
+
+      router.push("/login");
     } catch (error) {
       showErrorPopup(
         error instanceof Error

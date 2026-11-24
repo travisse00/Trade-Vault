@@ -34,24 +34,44 @@ function loadCaCertificate(): string | undefined {
 
 const ca = loadCaCertificate();
 
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL!,
-  ...(ca
-    ? {
-        ssl: {
-          ca,
-          rejectUnauthorized: true,
-        },
-      }
-    : {}),
-});
+function createPrismaClient(): PrismaClient {
+  const configuredMax = Number(process.env.DATABASE_POOL_MAX);
+  const max =
+    Number.isInteger(configuredMax) && configuredMax > 0
+      ? configuredMax
+      : 1;
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    adapter,
+  const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL!,
+    /**
+     * Supabase's session-mode pooler caps concurrent clients (15 on the free
+     * tier). Each app instance therefore keeps only one connection by default
+     * so several server bundles / replicas cannot exhaust the pool. Raise this
+     * with DATABASE_POOL_MAX only when using a bigger pool or the transaction
+     * pooler (port 6543), which multiplexes many clients.
+     */
+    max,
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 10_000,
+    ...(ca
+      ? {
+          ssl: {
+            ca,
+            rejectUnauthorized: true,
+          },
+        }
+      : {}),
   });
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+  return new PrismaClient({ adapter });
 }
+
+/**
+ * Cache the client on globalThis in every environment, not just development.
+ * Next.js can bundle this module into several server chunks; without the
+ * global singleton each chunk creates its own connection pool and quickly
+ * exceeds Supabase's session limit.
+ */
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+
+globalForPrisma.prisma = prisma;
