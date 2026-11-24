@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import type { EquityPoint } from "@/lib/service/analytics.service";
+import { formatCurrency } from "@/lib/format";
 
 export default function EquityCurve({
   equity,
@@ -36,7 +37,7 @@ export default function EquityCurve({
         <div className="text-right">
           <p className="text-xs text-[#85888B]">Current balance</p>
           <p className="mt-1 text-lg font-semibold text-[#A7A9AC]">
-            {finalBalance.toFixed(2)} {currency}
+            {formatCurrency(finalBalance, currency)}
           </p>
         </div>
       </div>
@@ -93,7 +94,7 @@ export default function EquityCurve({
                   color: "#FFFFFF",
                 }}
                 formatter={(value) => [
-                  `${Number(value).toFixed(2)} ${currency}`,
+                  formatCurrency(Number(value), currency),
                   "Balance",
                 ]}
                 labelStyle={{ color: "#A7A9AC" }}

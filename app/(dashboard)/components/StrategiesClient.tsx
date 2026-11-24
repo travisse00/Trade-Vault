@@ -10,20 +10,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import type { StrategyBreakdown } from "@/lib/service/analytics.service";
-
-function formatCurrency(value: string, currency: string) {
-  const amount = Number(value);
-
-  if (!Number.isFinite(amount)) return "—";
-
-  return `${amount < 0 ? "-" : ""}${Math.abs(amount).toLocaleString(
-    "en-US",
-    {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }
-  )} ${currency}`;
-}
+import { formatCurrency } from "@/lib/format";
 
 function formatProfitFactor(strategy: StrategyBreakdown) {
   if (strategy.profitFactor !== null) {

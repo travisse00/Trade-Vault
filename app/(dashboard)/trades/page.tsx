@@ -14,6 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { showErrorPopup, showSuccessPopup } from "@/lib/popup";
+import { formatSignedCurrency } from "@/lib/format";
 
 type TradeStatus = "ALL" | "OPEN" | "CLOSED";
 
@@ -40,14 +41,14 @@ const marketLabels: Record<MarketType, string> = {
   CRYPTO_FUTURES: "Crypto Futures",
 };
 
-function formatPnl(value: string | number | null) {
+function formatPnl(value: string | number | null, currency: string) {
   if (value === null) return "--";
 
   const amount = Number(value);
 
   if (!Number.isFinite(amount)) return "--";
 
-  return `${amount >= 0 ? "+" : "-"}${Math.abs(amount).toFixed(2)}`;
+  return formatSignedCurrency(amount, currency);
 }
 
 function formatDate(value: string) {
@@ -64,6 +65,7 @@ function formatDate(value: string) {
 
 export default function TradesPage() {
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [currency, setCurrency] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
@@ -92,6 +94,7 @@ export default function TradesPage() {
         }
 
         setTrades(data.trades ?? []);
+        setCurrency(data.currency ?? "");
       } catch (error) {
         const message =
           error instanceof Error
@@ -408,7 +411,7 @@ export default function TradesPage() {
                               : "text-[#D17A7A]"
                         }`}
                       >
-                        {formatPnl(pnl)}
+                        {formatPnl(pnl, currency)}
                         <p className="mt-1 text-[10px] font-normal text-[#686A6D]">
                           {isOpen ? "Awaiting close" : "Realised"}
                         </p>
@@ -508,7 +511,7 @@ export default function TradesPage() {
                               : "text-[#D17A7A]"
                         }`}
                       >
-                        {formatPnl(pnl)}
+                        {formatPnl(pnl, currency)}
                       </p>
                       <p className="mt-1 text-[10px] text-[#686A6D]">
                         {isOpen ? "Awaiting close" : "Realised P&L"}

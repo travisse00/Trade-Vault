@@ -11,7 +11,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import type { CalendarMonthData, CalendarDay } from "@/lib/service/calendar.service";
-import { formatCurrency } from "@/lib/format";
+import { formatSignedCurrency } from "@/lib/format";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -58,10 +58,6 @@ function formatDayHeading(dateKey: string): string {
     year: "numeric",
     timeZone: "UTC",
   }).format(date);
-}
-
-function formatSignedCurrency(value: string, currency: string): string {
-  return formatCurrency(value, currency, { signed: true });
 }
 
 function getDayState(day: CalendarDay | undefined): "empty" | "profit" | "loss" | "break_even" {

@@ -464,7 +464,10 @@ export async function getTrades() {
     },
   });
 
-  return trades;
+  return {
+    trades,
+    currency: account.currency,
+  };
 }
 
 /**

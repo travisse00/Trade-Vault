@@ -32,7 +32,10 @@ import type {
   SessionPerformanceRow,
   DayOfWeekRow,
 } from "@/lib/service/insights.service";
-import { formatCurrency, formatPercent } from "@/lib/format";
+import {
+  formatPercent,
+  formatSignedCurrency as formatSignedAmount,
+} from "@/lib/format";
 
 const PERIOD_OPTIONS: { value: InsightsPeriod; label: string }[] = [
   { value: "all", label: "All time" },
@@ -67,7 +70,7 @@ function formatWinRate(value: number | null): string {
 
 function formatSignedCurrency(value: string | null, currency: string): string {
   if (value === null) return "—";
-  return formatCurrency(value, currency, { signed: true });
+  return formatSignedAmount(value, currency);
 }
 
 function formatDateLabel(iso: string): string {

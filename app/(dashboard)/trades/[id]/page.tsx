@@ -14,8 +14,13 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+import { getQuoteCurrency } from "@/lib/calculations/pair";
 import { getTradeById } from "@/lib/service/trade.service";
 import { getTradeImageSignedUrls } from "@/lib/service/trade-image.service";
+import {
+  formatCurrency,
+  formatSignedCurrency,
+} from "@/lib/format";
 import TradeImageGallery from "../../components/TradeImageGallery";
 import CloseTradeForm from "../../components/CloseTradeForm";
 
@@ -36,26 +41,13 @@ function toNumber(value: unknown): number | null {
 function formatMoney(value: unknown, currency: string): string {
   const amount = toNumber(value);
 
-  if (amount === null) return "--";
-
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency || "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
-  } catch {
-    return `${amount.toFixed(2)} ${currency}`;
-  }
+  return amount === null ? "--" : formatCurrency(amount, currency);
 }
 
 function formatSignedMoney(value: unknown, currency: string): string {
   const amount = toNumber(value);
 
-  if (amount === null) return "--";
-
-  return `${amount >= 0 ? "+" : "-"}${formatMoney(Math.abs(amount), currency)}`;
+  return amount === null ? "--" : formatSignedCurrency(amount, currency);
 }
 
 function formatPrice(value: unknown): string {
@@ -64,6 +56,13 @@ function formatPrice(value: unknown): string {
   if (amount === null) return "--";
 
   return amount.toLocaleString("en-US", { maximumFractionDigits: 8 });
+}
+
+/** Asset prices stay in their quote currency; they are never converted here. */
+function formatQuotePrice(value: unknown, quoteCurrency: string): string {
+  const formatted = formatPrice(value);
+
+  return formatted === "--" ? formatted : `${formatted} ${quoteCurrency}`;
 }
 
 function formatNumber(value: unknown, digits = 2): string {
@@ -190,6 +189,7 @@ export default async function TradeDetailsPage({
   const isForex = trade.marketType === "FOREX";
   const isOpen = trade.status === "OPEN";
   const isLong = trade.direction === "LONG";
+  const quoteCurrency = getQuoteCurrency(trade.asset);
 
   const positionSize = isForex
     ? trade.lotSize !== null
@@ -312,13 +312,13 @@ export default async function TradeDetailsPage({
             <DetailItem label="Status" value={isOpen ? "Open" : "Closed"} />
             <DetailItem
               label="Entry Price"
-              value={formatPrice(trade.entryPrice)}
+              value={formatQuotePrice(trade.entryPrice, quoteCurrency)}
             />
             <DetailItem
               label="Exit Price"
               value={
                 trade.exitPrice !== null
-                  ? formatPrice(trade.exitPrice)
+                  ? formatQuotePrice(trade.exitPrice, quoteCurrency)
                   : "Not closed"
               }
               valueClassName={
@@ -352,7 +352,9 @@ export default async function TradeDetailsPage({
             <DetailItem
               label="Stop Loss"
               value={
-                trade.stopLoss !== null ? formatPrice(trade.stopLoss) : "Not set"
+                trade.stopLoss !== null
+                  ? formatQuotePrice(trade.stopLoss, quoteCurrency)
+                  : "Not set"
               }
               valueClassName={
                 trade.stopLoss !== null ? "text-white" : "text-[#686A6D]"
@@ -362,7 +364,7 @@ export default async function TradeDetailsPage({
               label="Take Profit"
               value={
                 trade.takeProfit !== null
-                  ? formatPrice(trade.takeProfit)
+                  ? formatQuotePrice(trade.takeProfit, quoteCurrency)
                   : "Not set"
               }
               valueClassName={

@@ -7,7 +7,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import type { RecentTradeItem } from "@/lib/service/analytics.service";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatSignedCurrency } from "@/lib/format";
 
 function formatPnl(value: string | null, currency: string) {
   if (value === null) return "—";
@@ -16,7 +16,7 @@ function formatPnl(value: string | null, currency: string) {
 
   if (!Number.isFinite(amount)) return "—";
 
-  return `${amount >= 0 ? "+" : "-"}${Math.abs(amount).toFixed(2)} ${currency}`;
+  return formatSignedCurrency(amount, currency);
 }
 
 export default function RecentTrades({

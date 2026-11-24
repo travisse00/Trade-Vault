@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import type { DrawdownSummary } from "@/lib/service/analytics.service";
+import { formatCurrency } from "@/lib/format";
 
 export default function DrawdownAnalysis({
   drawdown,
@@ -18,31 +19,23 @@ export default function DrawdownAnalysis({
   drawdown: DrawdownSummary;
   currency: string;
 }) {
-  const formatCurrency = (value: number) =>
-    `${Math.abs(value).toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })} ${currency}`;
-
   const formatPercent = (value: number | null) =>
     value === null ? "N/A" : `${value.toFixed(2)}%`;
 
   const metrics = [
     {
       label: "Current Drawdown",
-      value: formatCurrency(drawdown.currentDrawdown),
+      value: formatCurrency(drawdown.currentDrawdown, currency),
       detail: formatPercent(drawdown.currentDrawdownPercent),
     },
     {
       label: "Maximum Drawdown",
-      value: formatCurrency(drawdown.maxDrawdown),
+      value: formatCurrency(drawdown.maxDrawdown, currency),
       detail: formatPercent(drawdown.maxDrawdownPercent),
     },
     {
       label: "Current Equity",
-      value: `${drawdown.currentEquity < 0 ? "-" : ""}${formatCurrency(
-        drawdown.currentEquity
-      )}`,
+      value: formatCurrency(drawdown.currentEquity, currency),
       detail: "After deposits and closed trades",
     },
     {
@@ -149,7 +142,7 @@ export default function DrawdownAnalysis({
                   color: "#FFFFFF",
                 }}
                 formatter={(value) => [
-                  formatCurrency(Number(value)),
+                  formatCurrency(Number(value), currency),
                   "Drawdown",
                 ]}
                 labelStyle={{ color: "#A7A9AC" }}

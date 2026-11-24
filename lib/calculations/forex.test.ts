@@ -59,6 +59,26 @@ describe("calculateForex", () => {
     ).toThrow("Lot size must be greater than zero.");
   });
 
+  it("converts Forex P&L into a non-USD account currency", () => {
+    // EUR/USD prices stay in USD; the result is converted at 1500 NGN/USD.
+    const result = calculateForex({
+      direction: "LONG",
+      asset: "EUR/USD",
+      entryPrice: new Decimal("1.1000"),
+      exitPrice: new Decimal("1.1100"),
+      lotSize: new Decimal("1"),
+      commissionPerLot: new Decimal("3.5"),
+      accountCurrency: "NGN",
+      entryConversionRate: new Decimal("1500"),
+      exitConversionRate: new Decimal("1500"),
+      leverage: 100,
+    });
+
+    expect(result.grossPnL.toNumber()).toBe(1500000);
+    expect(result.totalFees.toNumber()).toBe(7);
+    expect(result.netPnL.toNumber()).toBe(1499993);
+  });
+
   it("handles JPY pairs with the correct pip size", () => {
     const result = calculateForex({
       direction: "LONG",

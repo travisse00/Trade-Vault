@@ -124,6 +124,28 @@ describe("buildAccountOverview", () => {
     expect(overview.currentBalance).toBe("1375.50");
   });
 
+  it.each(["NGN", "USD", "EUR", "GBP"])(
+    "keeps %s balances denominated in the account currency",
+    async (currency) => {
+      mockTransactionAggregate
+        .mockResolvedValueOnce({ _sum: { amount: new Decimal("500") } })
+        .mockResolvedValueOnce({ _sum: { amount: new Decimal("200") } });
+      mockTradeAggregate.mockResolvedValue({
+        _sum: { netPnL: new Decimal("75.50") },
+      });
+
+      const overview = await buildAccountOverview({
+        ...account,
+        currency,
+      } as never);
+
+      expect(overview.currency).toBe(currency);
+      expect(overview.currentBalance).toBe("1375.50");
+      expect(overview.totalDeposits).toBe("500.00");
+      expect(overview.totalWithdrawals).toBe("200.00");
+    }
+  );
+
   it("treats missing aggregates as zero", async () => {
     mockTransactionAggregate.mockResolvedValue({ _sum: { amount: null } });
     mockTradeAggregate.mockResolvedValue({ _sum: { netPnL: null } });

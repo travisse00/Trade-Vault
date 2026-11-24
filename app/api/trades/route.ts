@@ -10,11 +10,12 @@ import { uploadTradeImages } from "@/lib/service/trade-image.service";
 
 export async function GET() {
   try {
-    const trades = await getTrades();
+    const { trades, currency } = await getTrades();
 
     return NextResponse.json({
       success: true,
       trades,
+      currency,
     });
   } catch (error) {
     const message =

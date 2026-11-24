@@ -10,13 +10,14 @@ import type {
   StrategyBreakdown,
   MarketBreakdown,
 } from "@/lib/service/analytics.service";
+import { formatSignedCurrency } from "@/lib/format";
 
 function formatPnl(value: string, currency: string) {
   const amount = Number(value);
 
   if (!Number.isFinite(amount)) return "—";
 
-  return `${amount >= 0 ? "+" : "-"}${Math.abs(amount).toFixed(2)} ${currency}`;
+  return formatSignedCurrency(amount, currency);
 }
 
 export default function TradingBreakdown({

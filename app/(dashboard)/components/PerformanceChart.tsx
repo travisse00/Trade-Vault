@@ -15,6 +15,7 @@ import type {
   PerformancePeriod,
   PerformancePoint,
 } from "@/lib/service/analytics.service";
+import { formatSignedCurrency } from "@/lib/format";
 
 type Period = PerformancePeriod;
 
@@ -78,8 +79,7 @@ export default function PerformanceChart({
             isPositive ? "text-[#79B89A]" : "text-[#D17A7A]"
           }`}
         >
-          {isPositive ? "+" : "-"}
-          {Math.abs(currentPnl).toFixed(2)} {currency}
+          {formatSignedCurrency(currentPnl, currency)}
         </p>
       </div>
 
@@ -124,9 +124,7 @@ export default function PerformanceChart({
                   marginBottom: "4px",
                 }}
                 formatter={(value) => [
-                  `${Number(value) < 0 ? "-" : "+"}${Math.abs(
-                    Number(value)
-                  ).toFixed(2)} ${currency}`,
+                  formatSignedCurrency(Number(value), currency),
                   "Cumulative P&L",
                 ]}
               />
