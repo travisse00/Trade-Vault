@@ -4,6 +4,7 @@ import Decimal from "decimal.js";
 const {
   mockGetUser,
   mockAccountFindUnique,
+  mockAccountUpdate,
   mockTradeFindFirst,
   mockTradeCreate,
   mockTransaction,
@@ -14,6 +15,7 @@ const {
 } = vi.hoisted(() => ({
   mockGetUser: vi.fn(),
   mockAccountFindUnique: vi.fn(),
+  mockAccountUpdate: vi.fn(),
   mockTradeFindFirst: vi.fn(),
   mockTradeCreate: vi.fn(),
   mockTransaction: vi.fn(),
@@ -29,7 +31,10 @@ vi.mock("@/lib/supabase/server", () => ({
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    tradingAccount: { findUnique: mockAccountFindUnique },
+    tradingAccount: {
+      findUnique: mockAccountFindUnique,
+      update: mockAccountUpdate,
+    },
     trade: { findFirst: mockTradeFindFirst, create: mockTradeCreate },
     $transaction: mockTransaction,
   },
@@ -46,7 +51,7 @@ vi.mock("@/lib/service/trade-image.service", () => ({
   deleteTradeImageObjects: mockDeleteTradeImageObjects,
 }));
 
-import { updateTrade } from "./trade.service";
+import { createTrade, updateTrade } from "./trade.service";
 
 function makeExisting(overrides: Record<string, unknown> = {}) {
   return {
@@ -340,5 +345,85 @@ describe("updateTrade", () => {
     expect(mockDeleteTradeImageObjects).toHaveBeenCalledWith([
       "user_1/trade_1/new.png",
     ]);
+  });
+});
+
+describe("createTrade from a duplicated draft", () => {
+  const snapshotAt = new Date("2026-11-25T10:30:00.000Z");
+  let create: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "user_1" } },
+      error: null,
+    });
+    mockAccountFindUnique.mockResolvedValue({
+      id: "acct_1",
+      currency: "USD",
+    });
+    mockGetCurrencyRate.mockResolvedValue({
+      rate: new Decimal("1.25"),
+      fetchedAt: snapshotAt,
+    });
+
+    create = vi.fn().mockImplementation(async ({ data }) => ({
+      id: "new_trade_id",
+      ...data,
+    }));
+
+    mockTransaction.mockImplementation(
+      async (callback: (client: { trade: { create: typeof create } }) => unknown) =>
+        callback({ trade: { create } })
+    );
+  });
+
+  it("creates a separate OPEN trade with fresh snapshots and no copied results", async () => {
+    const duplicatedPayload = {
+      marketType: "FOREX",
+      asset: "EUR/USD",
+      direction: "LONG",
+      status: "OPEN",
+      entryPrice: 1.1,
+      entryDate: "2026-11-25T10:30:00.000Z",
+      lotSize: 0.1,
+      leverage: 100,
+      stopLoss: 1.08,
+      takeProfit: 1.15,
+      riskPercentage: 2,
+      strategy: "SMC",
+      notes: "Original setup notes",
+    };
+
+    await createTrade(duplicatedPayload);
+
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(mockTradeFindFirst).not.toHaveBeenCalled();
+    expect(mockGetCurrencyRate).toHaveBeenCalledTimes(1);
+
+    const data = create.mock.calls[0][0].data as Record<string, unknown>;
+
+    expect(data.accountId).toBe("acct_1");
+    expect(data.status).toBe("OPEN");
+    // The database generates a new ID; no ID from the source is submitted.
+    expect(data.id).toBeUndefined();
+    expect(data.exitPrice).toBeNull();
+    expect(data.exitDate).toBeNull();
+    expect(data.grossPnL).toBeNull();
+    expect(data.totalFees).toBeNull();
+    expect(data.netPnL).toBeNull();
+    expect(data.returnPercentage).toBeNull();
+    expect(data.exitConversionRate).toBeNull();
+    expect(data.exitConversionRateAt).toBeNull();
+
+    expect((data.entryConversionRate as Decimal).toString()).toBe("1.25");
+    expect(data.entryConversionRateAt).toEqual(snapshotAt);
+    // Margin is recalculated from the duplicated position details.
+    expect((data.quantity as Decimal).toString()).toBe("10000");
+    expect((data.marginUsed as Decimal).toString()).toBe("137.5");
+
+    // Creating an open duplicate never touches the account balance.
+    expect(mockAccountUpdate).not.toHaveBeenCalled();
   });
 });

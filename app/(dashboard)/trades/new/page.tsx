@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ChartCandlestick } from "lucide-react";
 import { showErrorPopup, showSuccessPopup } from "@/lib/popup";
+import {
+  buildCreateTradePayload,
+  consumeDuplicateDraft,
+} from "@/lib/trade-duplicate";
 
 type MarketType = "FOREX" | "CRYPTO_SPOT" | "CRYPTO_FUTURES";
 
@@ -90,6 +94,7 @@ export default function NewTradePage() {
   ] as const;
 
   const imagesRef = useRef(images);
+  const prefillAppliedRef = useRef(false);
 
   useEffect(() => {
     imagesRef.current = images;
@@ -100,6 +105,35 @@ export default function NewTradePage() {
     return () => {
       imagesRef.current.forEach(({ url }) => URL.revokeObjectURL(url));
     };
+  }, []);
+
+  // Consume a single-use duplicate draft on mount. All fields stay editable;
+  // only reusable details are copied and the trade always starts OPEN.
+  useEffect(() => {
+    const prefill = consumeDuplicateDraft();
+
+    if (!prefill) return;
+
+    prefillAppliedRef.current = true;
+    setMarketType(prefill.marketType);
+    setAsset(prefill.asset);
+    setDirection(prefill.direction);
+    setStatus(prefill.status);
+    setEntryDate(prefill.entryDate);
+    setEntryPrice(prefill.entryPrice);
+    setLotSize(prefill.lotSize);
+    setPositionValue(prefill.positionValue);
+    setLeverage(prefill.leverage);
+    setExitPrice(prefill.exitPrice);
+    setExitDate(prefill.exitDate);
+    setStopLoss(prefill.stopLoss);
+    setTakeProfit(prefill.takeProfit);
+    setRiskPercentage(prefill.riskPercentage);
+    setFees(prefill.fees);
+    setFundingFees(prefill.fundingFees);
+    setStrategy(prefill.strategy);
+    setNotes(prefill.notes);
+    setImages([]);
   }, []);
 
   // Load the user's saved account preferences.
@@ -113,6 +147,9 @@ export default function NewTradePage() {
         const data = await response.json();
 
         if (!response.ok || !data.account) return;
+
+        // A duplicate draft takes precedence over saved defaults.
+        if (prefillAppliedRef.current) return;
 
         const savedLeverage = Number(
           data.account.defaultLeverage ?? 1
@@ -202,42 +239,27 @@ export default function NewTradePage() {
       return;
     }
 
-    const payload: Record<string, unknown> = {
+    const payload = buildCreateTradePayload({
       marketType,
-      asset: asset.trim(),
+      asset,
       direction,
       status,
-      entryPrice: Number(entryPrice),
-      entryDate: new Date(entryDate).toISOString(),
-      leverage: Number(leverage) || defaultLeverage,
-
-      ...(status === "CLOSED"
-        ? {
-            exitPrice: Number(exitPrice),
-            exitDate: new Date(exitDate).toISOString(),
-          }
-        : {}),
-
-      ...(marketType === "FOREX"
-        ? { lotSize: Number(lotSize) }
-        : { positionValue: Number(positionValue) }),
-
-      ...(marketType === "CRYPTO_SPOT"
-        ? { fees: Number(fees) }
-        : {}),
-
-      ...(marketType === "CRYPTO_FUTURES"
-        ? { fundingFees: Number(fundingFees) }
-        : {}),
-
-      ...(stopLoss ? { stopLoss: Number(stopLoss) } : {}),
-      ...(takeProfit ? { takeProfit: Number(takeProfit) } : {}),
-      ...(riskPercentage
-        ? { riskPercentage: Number(riskPercentage) }
-        : {}),
-      ...(strategy.trim() ? { strategy: strategy.trim() } : {}),
-      ...(notes.trim() ? { notes: notes.trim() } : {}),
-    };
+      entryDate,
+      entryPrice,
+      lotSize,
+      positionValue,
+      leverage,
+      defaultLeverage,
+      exitPrice,
+      exitDate,
+      stopLoss,
+      takeProfit,
+      riskPercentage,
+      fees,
+      fundingFees,
+      strategy,
+      notes,
+    });
 
     try {
       setIsSubmitting(true);

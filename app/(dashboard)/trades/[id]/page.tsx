@@ -23,6 +23,7 @@ import {
 } from "@/lib/format";
 import TradeImageGallery from "../../components/TradeImageGallery";
 import CloseTradeForm from "../../components/CloseTradeForm";
+import DuplicateTradeButton from "../../components/DuplicateTradeButton";
 
 const marketLabels: Record<string, string> = {
   FOREX: "Forex",
@@ -283,13 +284,44 @@ export default async function TradeDetailsPage({
             />
           )}
 
-          <Link
-            href={`/trades/${trade.id}/edit`}
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#303236] px-4 text-sm font-medium text-[#C4C6C8] transition hover:bg-[#202225] hover:text-white"
-          >
-            <Pencil size={16} />
-            Edit Trade
-          </Link>
+          <div className="flex w-full flex-col gap-2">
+            <DuplicateTradeButton
+              trade={{
+                id: trade.id,
+                marketType: trade.marketType,
+                asset: trade.asset,
+                direction: trade.direction,
+                entryPrice: String(trade.entryPrice),
+                lotSize:
+                  trade.lotSize === null ? null : String(trade.lotSize),
+                positionValue:
+                  trade.positionValue === null
+                    ? null
+                    : String(trade.positionValue),
+                leverage: String(trade.leverage),
+                fees: String(trade.fees),
+                fundingFees: String(trade.fundingFees),
+                stopLoss:
+                  trade.stopLoss === null ? null : String(trade.stopLoss),
+                takeProfit:
+                  trade.takeProfit === null ? null : String(trade.takeProfit),
+                riskPercentage:
+                  trade.riskPercentage === null
+                    ? null
+                    : String(trade.riskPercentage),
+                strategy: trade.strategy,
+                notes: trade.notes,
+              }}
+            />
+
+            <Link
+              href={`/trades/${trade.id}/edit`}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#303236] px-4 text-sm font-medium text-[#C4C6C8] transition hover:bg-[#202225] hover:text-white"
+            >
+              <Pencil size={16} />
+              Edit Trade
+            </Link>
+          </div>
         </div>
       </div>
 
